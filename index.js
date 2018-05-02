@@ -60,7 +60,7 @@ ExpressBrute.prototype.getMiddleware = function(options) {
         if (!options.ignoreIP) {
           key = ExpressBrute._getKey([req.ip, this.name, key]);
         } else {
-          key = ExpressBrute._getKey([this.name, key]);
+          key = ExpressBrute._getKey([...key]);
         }
 
         // attach a simpler "reset" function to req.brute.reset
@@ -148,6 +148,7 @@ ExpressBrute.prototype.getMiddleware = function(options) {
               this.store.set(
                 key,
                 {
+                  freeRetries: this.options.freeRetries,
                   count: count + 1,
                   lastRequest: new Date(this.now()),
                   firstRequest: new Date(firstRequestTime)
@@ -162,10 +163,9 @@ ExpressBrute.prototype.getMiddleware = function(options) {
                       message: 'Cannot increment request count',
                       parent: err
                     });
-                    req.remainingRequests =
-                      count + 1 - this.options.freeRetries;
                     return;
                   }
+                  req.remainingRequests = count - this.options.freeRetries;
                   typeof next == 'function' && next();
                 }, this)
               );
